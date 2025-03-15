@@ -189,15 +189,50 @@ def install_dependencies():
     print_info("This process may take several minutes depending on your internet connection and the packages required.")
     
     # Upgrade pip to the latest version to ensure compatibility with newer packages
-    print_info("Step 1/2: Upgrading pip to the latest version...")
-    pip_upgrade_result = run_command([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+    print_info("Step 1/3: Upgrading pip to the latest version...")
+    pip_upgrade_result = run_command([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], check=False)
     if pip_upgrade_result.returncode == 0:
         print_success("Pip successfully upgraded to the latest version.")
     else:
         print_warning("Pip upgrade encountered issues but continuing with installation.")
     
+    # On Windows, check for build tools
+    if platform.system().lower() == "windows":
+        print_info("Step 2/3: Checking for build dependencies on Windows...")
+        try:
+            # Try to import a package that needs compilation to see if build tools work
+            import numpy
+            print_success("Build dependencies appear to be available.")
+        except ImportError:
+            try:
+                # Install a simple package that doesn't require compilation
+                run_command([sys.executable, "-m", "pip", "install", "wheel"], check=False)
+                
+                # Try to install a package that needs compilation but with a precompiled wheel
+                print_info("Installing numpy to test build environment...")
+                numpy_result = run_command([sys.executable, "-m", "pip", "install", "numpy", "--prefer-binary"], check=False)
+                
+                if numpy_result.returncode != 0:
+                    print_warning("You may need to install Microsoft Visual C++ Build Tools.")
+                    print_info("Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/")
+                    print_info("After installing build tools, run this setup script again.")
+                    
+                    # Ask if the user wants to continue anyway
+                    print_info("Do you want to continue with installation anyway? [y/N]: ")
+                    response = input().strip().lower()
+                    if response != 'y':
+                        print_info("Setup aborted. Please install build tools and try again.")
+                        sys.exit(1)
+            except Exception as e:
+                print_warning(f"Could not verify build dependencies: {e}")
+                print_info("Continuing with installation anyway...")
+    else:
+        print_info("Step 2/3: Checking for build dependencies...")
+        # On non-Windows platforms, just make sure we have pip and setuptools
+        run_command([sys.executable, "-m", "pip", "install", "--upgrade", "setuptools", "wheel"], check=False)
+    
     # Install all required dependencies from requirements.txt
-    print_info("Step 2/2: Installing required packages from requirements.txt...")
+    print_info("Step 3/3: Installing required packages from requirements.txt...")
     if os.path.exists("requirements.txt"):
         # Read requirements file to show what will be installed
         with open("requirements.txt", "r") as req_file:
@@ -205,14 +240,32 @@ def install_dependencies():
             print_info(f"Found {len(requirements)} packages to install: {', '.join(requirements[:5])}" + 
                       (f" and {len(requirements)-5} more..." if len(requirements) > 5 else ""))
         
-        # Install dependencies with verbose output
-        install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "-v"])
+        # Try to install with --prefer-binary first on Windows to use pre-compiled wheels when available
+        if platform.system().lower() == "windows":
+            print_info("Attempting to install packages from pre-compiled binaries (recommended for Windows)...")
+            install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--prefer-binary"], check=False)
+            
+            if install_result.returncode != 0:
+                print_warning("Could not install all packages from binaries. Trying regular installation...")
+                install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=False)
+        else:
+            # Regular installation for non-Windows platforms
+            install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=False)
+        
         if install_result.returncode == 0:
             print_success("All dependencies installed successfully!")
             print_info("Your environment is now ready to run the application.")
+            return True
         else:
             print_warning("Some dependencies may not have installed correctly.")
+            print_warning("This may be due to missing build tools or incompatible package versions.")
+            
+            if platform.system().lower() == "windows":
+                print_info("For Windows users: Make sure Microsoft Visual C++ Build Tools are installed.")
+                print_info("Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/")
+            
             print_info("You may need to install problematic packages manually.")
+            return False
     else:
         print_error("Critical error: requirements.txt not found in the current directory!")
         print_error("Cannot continue with setup without knowing which packages to install.")
@@ -270,7 +323,7 @@ def main():
     install_ffmpeg()
     
     # Install dependencies directly
-    install_dependencies()
+    dependencies_installed = install_dependencies()
     
     # Create launcher script
     create_launcher_script()
@@ -283,9 +336,18 @@ def main():
     """)
     
     if system == "Windows":
+        if not dependencies_installed:
+            print_warning("Some dependencies may not have been installed correctly.")
+            print_info("Please ensure Microsoft Visual C++ Build Tools are installed before running the application.")
+            print_info("Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/")
+        
         print_info("  Run the 'runapp.bat' file or execute:")
         print_info("  streamlit run src/app.py")
     else:
+        if not dependencies_installed:
+            print_warning("Some dependencies may not have been installed correctly.")
+            print_info("You may need to install additional system packages or development tools.")
+        
         print_info("  Run the 'runapp.sh' file or execute:")
         print_info("  streamlit run src/app.py")
     
