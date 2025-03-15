@@ -17,9 +17,11 @@ A Streamlit application that creates SRT subtitle files by aligning video speech
 
 - Python 3.8 or later
 - FFmpeg (required for audio processing)
-- For Windows users: Microsoft Visual C++ Build Tools may be required for installing certain Python packages
-  - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
-  - When installing, select "Desktop development with C++"
+- For Windows users: 
+  - Microsoft Visual C++ Build Tools may be required for installing certain Python packages
+    - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+    - When installing, select "Desktop development with C++"
+  - Administrator privileges are recommended for installation
 
 ## Quick Installation (Recommended)
 
@@ -32,6 +34,9 @@ The easiest way to install and run the application is using our setup script, wh
 # Clone the repository (or download and extract the ZIP)
 git clone https://github.com/sarthak-pokharel/unheardwhispers.git
 cd unheardwhispers
+
+# For Windows users: Run Command Prompt or PowerShell as Administrator
+# For macOS/Linux: You may need to use sudo for system-wide installations
 
 # Run the setup script
 python setup.py
@@ -53,16 +58,25 @@ streamlit run src/app.py
 
 If you encounter build errors on Windows during the setup process:
 
-1. Make sure you have Microsoft Visual C++ Build Tools installed
+1. **Run as Administrator** (Most Important)
+   - Right-click on Command Prompt or PowerShell
+   - Select "Run as administrator"
+   - Navigate to the project directory
+   - Run `python setup.py`
+
+2. Make sure you have Microsoft Visual C++ Build Tools installed
    - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
    - Select "Desktop development with C++" during installation
    
-2. If specific packages fail to install, try installing them individually:
+3. If specific packages fail to install, try installing them individually with the `--user` flag:
    ```
-   pip install streamlit
-   pip install openai-whisper --prefer-binary
-   pip install -r requirements.txt
+   pip install streamlit --user
+   pip install openai-whisper --prefer-binary --user
+   pip install pydub nltk pandas plotly --user
+   pip install -r requirements.txt --prefer-binary --user
    ```
+
+4. Try using the updated `runapp.bat` which includes an option to restart with administrator privileges
 
 ## Manual Installation
 
@@ -75,6 +89,10 @@ If you prefer to install manually:
    - **Linux**: `sudo apt install ffmpeg` (or use your distro's package manager)
 3. Install dependencies:
    ```
+   # On Windows (run as administrator):
+   pip install -r requirements.txt --prefer-binary
+   
+   # On macOS/Linux:
    pip install -r requirements.txt
    ```
 4. Run the application:
