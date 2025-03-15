@@ -23,6 +23,7 @@ A Streamlit application that creates SRT subtitle files by aligning video speech
 The easiest way to install and run the application is using our setup script, which will:
 - Check and install FFmpeg if needed
 - Install all Python dependencies
+- Create launcher scripts (runapp.bat/runapp.sh)
 
 ```bash
 # Clone the repository (or download and extract the ZIP)
@@ -35,6 +36,13 @@ python setup.py
 
 After setup completes, run the application with:
 ```bash
+# On Windows:
+runapp.bat
+
+# On macOS/Linux:
+./runapp.sh
+
+# Or directly with Streamlit:
 streamlit run src/app.py
 ```
 
