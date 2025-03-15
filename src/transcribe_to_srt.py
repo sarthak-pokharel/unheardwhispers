@@ -9,12 +9,50 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from tqdm import tqdm
 import time
+import sys
+import subprocess
 
 # Download NLTK resources (run once)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt', quiet=True)
+
+# Ensure FFmpeg can be found if it's in a local directory
+def initialize_local_ffmpeg():
+    """Ensure FFmpeg binaries in project directory are properly detected."""
+    try:
+        # Get script directory (or current working directory)
+        if getattr(sys, 'frozen', False):
+            # Running as executable
+            script_dir = os.path.dirname(sys.executable)
+        else:
+            # Running as script
+            script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Check for local FFmpeg in the project's tools directory
+        ffmpeg_path = os.path.join(script_dir, "tools", "ffmpeg", "bin")
+        
+        if os.path.exists(ffmpeg_path):
+            # Add to PATH if not already there
+            if ffmpeg_path not in os.environ['PATH']:
+                os.environ['PATH'] = ffmpeg_path + os.pathsep + os.environ['PATH']
+                print(f"Using local FFmpeg from: {ffmpeg_path}")
+        
+        # Verify FFmpeg is available
+        try:
+            subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            return True
+        except (subprocess.SubprocessError, FileNotFoundError):
+            print("WARNING: FFmpeg not found in PATH. Audio processing may fail.")
+            return False
+            
+    except Exception as e:
+        print(f"Error initializing local FFmpeg: {e}")
+        return False
+
+# Initialize local FFmpeg on module import
+initialize_local_ffmpeg()
 
 def extract_audio_from_video(video_file_path, audio_file_path):
     """Extract audio from video file."""

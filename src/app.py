@@ -14,12 +14,56 @@ import numpy as np
 import base64
 from io import StringIO
 import plotly.express as px
+import sys
+import subprocess
 
 # Download NLTK resources (run once)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt', quiet=True)
+
+# Ensure FFmpeg can be found if it's in a local directory
+def initialize_local_ffmpeg():
+    """Ensure FFmpeg binaries in project directory are properly detected."""
+    try:
+        # Get script directory (or current working directory)
+        if getattr(sys, 'frozen', False):
+            # Running as executable
+            script_dir = os.path.dirname(sys.executable)
+        else:
+            # Running as script
+            script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # Check for local FFmpeg in the project's tools directory
+        ffmpeg_path = os.path.join(script_dir, "tools", "ffmpeg", "bin")
+        
+        if os.path.exists(ffmpeg_path):
+            # Add to PATH if not already there
+            if ffmpeg_path not in os.environ['PATH']:
+                os.environ['PATH'] = ffmpeg_path + os.pathsep + os.environ['PATH']
+                print(f"Using local FFmpeg from: {ffmpeg_path}")
+                return True
+        
+        # Verify FFmpeg is available
+        try:
+            result = subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
+            if result.returncode == 0:
+                print("FFmpeg detected in system PATH")
+                return True
+            else:
+                print("WARNING: FFmpeg check returned non-zero exit code")
+                return False
+        except (subprocess.SubprocessError, FileNotFoundError):
+            print("WARNING: FFmpeg not found in PATH. Audio processing may fail.")
+            return False
+            
+    except Exception as e:
+        print(f"Error initializing local FFmpeg: {e}")
+        return False
+
+# Initialize local FFmpeg before app starts
+ffmpeg_available = initialize_local_ffmpeg()
 
 # Set page config
 st.set_page_config(
@@ -450,6 +494,18 @@ def main():
     # Header
     st.markdown('<p class="main-header">🎬 Script to Subtitles Converter</p>', unsafe_allow_html=True)
     st.markdown('<p class="info-text">Create accurate SRT subtitles from video using optional script matching</p>', unsafe_allow_html=True)
+    
+    # Check FFmpeg availability
+    if not ffmpeg_available:
+        st.markdown('<div class="warning-box">', unsafe_allow_html=True)
+        st.warning("""
+        ⚠️ **FFmpeg Not Detected**: This app requires FFmpeg to process audio/video files.
+        
+        Please ensure you've run the setup script (`setup_windows.bat` or `setup_linux.sh`) before using this app.
+        
+        If you continue, the app may fail when processing videos.
+        """)
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # Sidebar for options
     with st.sidebar:

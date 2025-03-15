@@ -30,25 +30,10 @@ echo "  Script to Subtitles Converter Setup"
 echo "========================================"
 echo
 
-# Check if running with sudo/root on Linux
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    if [ "$EUID" -ne 0 ]; then
-        print_warning "Not running as root. Some installations may fail."
-        echo "Consider running this script with sudo:"
-        echo "sudo $0"
-        
-        read -p "Continue anyway? [y/N]: " response
-        if [[ ! "$response" =~ ^[yY]$ ]]; then
-            print_info "Setup aborted. Please run with sudo and try again."
-            exit 1
-        fi
-        
-        print_info "Continuing without sudo..."
-        echo
-    else
-        print_success "Running with root privileges."
-    fi
-fi
+# Create project directories
+print_info "Creating project directories..."
+mkdir -p tools/ffmpeg/bin
+mkdir -p temp
 
 # Check Python version
 if ! command -v python3 &> /dev/null; then
@@ -69,110 +54,122 @@ fi
 
 print_success "Python $python_version detected."
 
-# Install FFmpeg if not already installed
-if ! command -v ffmpeg &> /dev/null; then
-    print_info "FFmpeg not found. Installing FFmpeg..."
+# Install FFmpeg locally (in project directory)
+print_info "Installing FFmpeg locally to project directory..."
+
+# Determine OS and architecture
+ARCH=$(uname -m)
+OS=$(uname -s)
+FFMPEG_URL=""
+FFMPEG_BIN_PATH="tools/ffmpeg/bin"
+
+# Set download URL based on OS and architecture
+if [[ "$OS" == "Linux" ]]; then
+    if [[ "$ARCH" == "x86_64" ]]; then
+        FFMPEG_URL="https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz"
+    elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+        FFMPEG_URL="https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz"
+    fi
+elif [[ "$OS" == "Darwin" ]]; then  # macOS
+    if [[ "$ARCH" == "x86_64" ]]; then
+        FFMPEG_URL="https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip"
+    elif [[ "$ARCH" == "arm64" ]]; then
+        FFMPEG_URL="https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip"
+    fi
+fi
+
+# Download and extract FFmpeg
+if [[ -n "$FFMPEG_URL" ]]; then
+    print_info "Downloading FFmpeg from $FFMPEG_URL..."
     
-    # Detect the OS
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        print_info "Detected macOS"
-        
-        # Check if Homebrew is installed
-        if command -v brew &> /dev/null; then
-            print_info "Installing FFmpeg via Homebrew..."
-            brew install ffmpeg
-        else
-            print_warning "Homebrew is not installed. Installing Homebrew first..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-            
-            if [ $? -eq 0 ]; then
-                print_success "Homebrew installed successfully!"
-                print_info "Installing FFmpeg via Homebrew..."
-                brew install ffmpeg
-            else
-                print_error "Failed to install Homebrew."
-                print_warning "Please install FFmpeg manually: https://ffmpeg.org/download.html"
-                exit 1
-            fi
-        fi
-    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        # Linux
-        print_info "Detected Linux"
-        
-        # Try to detect the package manager
-        if command -v apt-get &> /dev/null; then
-            print_info "Installing FFmpeg via apt-get..."
-            apt-get update && apt-get install -y ffmpeg
-        elif command -v dnf &> /dev/null; then
-            print_info "Installing FFmpeg via dnf..."
-            dnf install -y ffmpeg
-        elif command -v yum &> /dev/null; then
-            print_info "Installing FFmpeg via yum..."
-            yum install -y epel-release && yum install -y ffmpeg
-        elif command -v pacman &> /dev/null; then
-            print_info "Installing FFmpeg via pacman..."
-            pacman -Sy ffmpeg --noconfirm
-        elif command -v zypper &> /dev/null; then
-            print_info "Installing FFmpeg via zypper..."
-            zypper install -y ffmpeg
-        else
-            print_warning "Could not detect package manager."
-            print_warning "Please install FFmpeg manually using your distribution's package manager."
+    # Create temp directory
+    mkdir -p temp
+    
+    # Download FFmpeg
+    if [[ "$OS" == "Darwin" && ("$ARCH" == "x86_64" || "$ARCH" == "arm64") ]]; then
+        # macOS uses a zip file
+        curl -L "$FFMPEG_URL" -o temp/ffmpeg.zip
+        if [ $? -ne 0 ]; then
+            print_error "Failed to download FFmpeg"
             exit 1
         fi
+        
+        # Extract
+        unzip -o temp/ffmpeg.zip -d "$FFMPEG_BIN_PATH"
+        chmod +x "$FFMPEG_BIN_PATH/ffmpeg"
     else
-        print_error "Unsupported platform: $OSTYPE"
-        print_warning "Please install FFmpeg manually: https://ffmpeg.org/download.html"
-        exit 1
+        # Linux uses tar.xz
+        wget -q "$FFMPEG_URL" -O temp/ffmpeg.tar.xz
+        if [ $? -ne 0 ]; then
+            print_error "Failed to download FFmpeg"
+            exit 1
+        fi
+        
+        # Extract
+        tar -xf temp/ffmpeg.tar.xz -C temp
+        
+        # Find and copy FFmpeg binaries
+        find temp -name "ffmpeg" -type f -exec cp {} "$FFMPEG_BIN_PATH/ffmpeg" \;
+        find temp -name "ffprobe" -type f -exec cp {} "$FFMPEG_BIN_PATH/ffprobe" \;
+        find temp -name "ffplay" -type f -exec cp {} "$FFMPEG_BIN_PATH/ffplay" \;
+        
+        # Make executable
+        chmod +x "$FFMPEG_BIN_PATH/ffmpeg" "$FFMPEG_BIN_PATH/ffprobe" 2>/dev/null
     fi
     
     # Verify installation
-    if command -v ffmpeg &> /dev/null; then
-        print_success "FFmpeg installed successfully!"
+    if [ -f "$FFMPEG_BIN_PATH/ffmpeg" ]; then
+        print_success "FFmpeg installed successfully in project directory"
     else
-        print_error "FFmpeg installation failed."
-        print_warning "Please install FFmpeg manually and try again."
+        print_error "Failed to install FFmpeg locally"
         exit 1
     fi
 else
-    print_success "FFmpeg is already installed!"
+    print_error "Unsupported platform: $OS $ARCH"
+    print_error "Please manually download FFmpeg from https://ffmpeg.org/download.html"
+    print_error "and place the executables in $FFMPEG_BIN_PATH"
+    exit 1
 fi
 
-# Install Python dependencies
-echo
-print_info "Installing Python dependencies..."
-print_info "This process may take several minutes depending on your internet connection."
+# Clean up
+print_info "Cleaning up temporary files..."
+rm -rf temp/*
+
+# Create Python virtual environment
+print_info "Creating Python virtual environment..."
+python3 -m venv venv
+
+# Activate virtual environment
+print_info "Activating virtual environment and installing dependencies..."
+source venv/bin/activate
 
 # Upgrade pip first
 print_info "Upgrading pip, wheel, and setuptools..."
-python3 -m pip install --upgrade pip wheel setuptools
+pip install --upgrade pip wheel setuptools
 
 # Check if requirements.txt exists
 if [ ! -f "requirements.txt" ]; then
     print_error "requirements.txt not found!"
     print_info "Please ensure you're running this script from the project root directory."
+    deactivate
     exit 1
 fi
 
 # Install dependencies
 print_info "Installing required packages from requirements.txt..."
-python3 -m pip install -r requirements.txt
+pip install streamlit
+pip install -r requirements.txt
 
 if [ $? -ne 0 ]; then
     print_warning "Some packages may not have installed correctly."
     print_info "Trying to install critical packages individually..."
     
-    python3 -m pip install streamlit
-    python3 -m pip install openai-whisper
-    python3 -m pip install pydub nltk pandas plotly pysrt
-    
-    print_warning "If you still experience issues, you may need to install additional system dependencies."
-    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        print_info "For Ubuntu/Debian, try: sudo apt-get install python3-dev build-essential"
-        print_info "For Fedora, try: sudo dnf install python3-devel gcc"
-    fi
+    pip install openai-whisper
+    pip install pydub nltk pandas plotly pysrt
 fi
+
+# Deactivate virtual environment
+deactivate
 
 # Create launcher script
 print_info "Creating launcher script..."
@@ -181,6 +178,7 @@ cat > runapp.sh << 'EOF'
 
 # Define color codes
 BLUE='\033[0;34m'
+GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
@@ -188,23 +186,21 @@ echo "Script to Subtitles Converter"
 echo "============================"
 echo
 
-# Check if Python dependencies are installed
-python3 -c "import streamlit" 2>/dev/null
-if [ $? -ne 0 ]; then
-    echo -e "${RED}[ERROR]${NC} Required Python packages are not installed."
-    echo "Please run setup_linux.sh first."
-    exit 1
-fi
+# Set up paths
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PATH="$SCRIPT_DIR/tools/ffmpeg/bin:$PATH"
 
-# Check if FFmpeg is installed
-if ! command -v ffmpeg &> /dev/null; then
-    echo -e "${RED}[WARNING]${NC} FFmpeg not found in PATH. The application may not work correctly."
-    echo "Please run setup_linux.sh first."
-    exit 1
-fi
+# Activate virtual environment
+source "$SCRIPT_DIR/venv/bin/activate"
 
 echo -e "${BLUE}[INFO]${NC} Starting Streamlit application..."
+echo -e "${BLUE}[INFO]${NC} FFmpeg path: $SCRIPT_DIR/tools/ffmpeg/bin"
+
+# Run the application
 streamlit run src/app.py
+
+# Deactivate virtual environment when done
+deactivate
 EOF
 
 # Make it executable
@@ -217,8 +213,5 @@ echo "============================================"
 echo
 echo "  Run the following command:"
 echo "  ./runapp.sh"
-echo
-echo "  Or directly with Streamlit:"
-echo "  streamlit run src/app.py"
 echo
 echo "============================================" 
