@@ -65,3 +65,4 @@ whisper_models/
 # Logs
 *.log
 
+tools/
