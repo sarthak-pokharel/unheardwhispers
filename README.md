@@ -17,6 +17,9 @@ A Streamlit application that creates SRT subtitle files by aligning video speech
 
 - Python 3.8 or later
 - FFmpeg (required for audio processing)
+- For Windows users: Microsoft Visual C++ Build Tools may be required for installing certain Python packages
+  - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+  - When installing, select "Desktop development with C++"
 
 ## Quick Installation (Recommended)
 
@@ -45,6 +48,21 @@ runapp.bat
 # Or directly with Streamlit:
 streamlit run src/app.py
 ```
+
+### Troubleshooting Windows Installation
+
+If you encounter build errors on Windows during the setup process:
+
+1. Make sure you have Microsoft Visual C++ Build Tools installed
+   - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
+   - Select "Desktop development with C++" during installation
+   
+2. If specific packages fail to install, try installing them individually:
+   ```
+   pip install streamlit
+   pip install openai-whisper --prefer-binary
+   pip install -r requirements.txt
+   ```
 
 ## Manual Installation
 

@@ -188,6 +188,34 @@ def install_dependencies():
     print_info("Installing Python dependencies...")
     print_info("This process may take several minutes depending on your internet connection and the packages required.")
     
+    # Check if running as admin on Windows
+    is_admin = False
+    if platform.system().lower() == "windows":
+        try:
+            # This will fail if not running as admin
+            import ctypes
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            
+            if not is_admin:
+                print_warning("You are not running as administrator.")
+                print_warning("Some installations may fail due to permission issues.")
+                print_info("Consider running this script with administrator privileges:")
+                print_info("1. Right-click on Command Prompt or PowerShell")
+                print_info("2. Select 'Run as administrator'")
+                print_info("3. Navigate to this directory and run 'python setup.py'")
+                
+                # Ask if the user wants to continue anyway
+                print_info("Do you want to continue anyway? [y/N]: ")
+                response = input().strip().lower()
+                if response != 'y':
+                    print_info("Setup aborted. Please run as administrator and try again.")
+                    sys.exit(1)
+            else:
+                print_success("Running with administrator privileges.")
+        except Exception:
+            # If we can't determine admin status, just continue
+            pass
+    
     # Upgrade pip to the latest version to ensure compatibility with newer packages
     print_info("Step 1/3: Upgrading pip to the latest version...")
     pip_upgrade_result = run_command([sys.executable, "-m", "pip", "install", "--upgrade", "pip"], check=False)
@@ -217,6 +245,10 @@ def install_dependencies():
                     print_info("Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/")
                     print_info("After installing build tools, run this setup script again.")
                     
+                    if not is_admin and platform.system().lower() == "windows":
+                        print_warning("Installation is more likely to succeed if you run as administrator.")
+                        print_info("Please try running the script again with administrator privileges.")
+                    
                     # Ask if the user wants to continue anyway
                     print_info("Do you want to continue with installation anyway? [y/N]: ")
                     response = input().strip().lower()
@@ -243,16 +275,30 @@ def install_dependencies():
         # Try to install with --prefer-binary first on Windows to use pre-compiled wheels when available
         if platform.system().lower() == "windows":
             print_info("Attempting to install packages from pre-compiled binaries (recommended for Windows)...")
-            install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--prefer-binary"], check=False)
             
-            if install_result.returncode != 0:
-                print_warning("Could not install all packages from binaries. Trying regular installation...")
-                install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=False)
+            try:
+                # First try installing with user scheme if not admin
+                if not is_admin:
+                    print_info("Installing with user scheme (--user flag) since not running as administrator...")
+                    install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--prefer-binary", "--user"], check=False)
+                else:
+                    install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--prefer-binary"], check=False)
+                
+                if install_result.returncode != 0:
+                    print_warning("Could not install all packages from binaries. Trying regular installation...")
+                    
+                    if not is_admin:
+                        install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt", "--user"], check=False)
+                    else:
+                        install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=False)
+            except Exception as e:
+                print_warning(f"Error during package installation: {e}")
+                install_result = None
         else:
             # Regular installation for non-Windows platforms
             install_result = run_command([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"], check=False)
         
-        if install_result.returncode == 0:
+        if install_result and install_result.returncode == 0:
             print_success("All dependencies installed successfully!")
             print_info("Your environment is now ready to run the application.")
             return True
@@ -261,8 +307,14 @@ def install_dependencies():
             print_warning("This may be due to missing build tools or incompatible package versions.")
             
             if platform.system().lower() == "windows":
-                print_info("For Windows users: Make sure Microsoft Visual C++ Build Tools are installed.")
-                print_info("Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/")
+                print_info("For Windows users, here are some troubleshooting steps:")
+                print_info("1. Ensure Microsoft Visual C++ Build Tools are installed.")
+                print_info("   Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/")
+                print_info("2. Run the script with administrator privileges")
+                print_info("3. Try installing packages individually:")
+                print_info("   pip install streamlit --user")
+                print_info("   pip install openai-whisper --prefer-binary --user")
+                print_info("   pip install -r requirements.txt --prefer-binary --user")
             
             print_info("You may need to install problematic packages manually.")
             return False
