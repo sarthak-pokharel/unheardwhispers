@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.env
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Project specific
+*.wav
+*.mp3
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.srt
+!output_subtitles.srt
+temp/
+output/
+logs/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Model files
+*.pt
+*.pth
+*.model
+whisper_models/
+
+# Large data files
+*.csv
+*.json
+*.xlsx
+*.db
+*.sqlite
+
+# Logs
+*.log
+

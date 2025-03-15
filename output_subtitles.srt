@@ -1,0 +1,536 @@
+1
+00:00:00,000 --> 00:00:02,000
+DOCTOR: I'm a time traveller.
+
+2
+00:00:02,000 --> 00:00:05,720
+DOCTOR: I'm stuck in 1969.
+
+3
+00:00:05,720 --> 00:00:06,960
+MARTHA: We're stuck.
+
+4
+00:00:06,960 --> 00:00:08,480
+MARTHA: All of space and time, he promised me.
+
+5
+00:00:08,480 --> 00:00:09,640
+MARTHA: Now I've got a job in a shop
+
+6
+00:00:09,640 --> 00:00:10,640
+MARTHA: I've got to support him!
+
+7
+00:00:10,640 --> 00:00:12,520
+MALCOLM: I'm sorry
+
+8
+00:00:12,520 --> 00:00:14,280
+SALLY: I've seen this bit before.
+
+9
+00:00:14,280 --> 00:00:16,200
+DOCTOR: Quite possibly.
+
+10
+00:00:16,200 --> 00:00:19,160
+SALLY: 1969, that's where you're talking from?
+
+11
+00:00:19,160 --> 00:00:20,840
+DOCTOR: 'Fraid so.
+
+12
+00:00:20,840 --> 00:00:22,920
+SALLY: But you're replying to me.
+
+13
+00:00:22,920 --> 00:00:24,480
+SALLY: You can't know exactly what I'm gonna say
+
+14
+00:00:24,480 --> 00:00:26,320
+SALLY: 40 years before I say it!
+
+15
+00:00:26,320 --> 00:00:27,400
+DOCTOR: 38.
+
+16
+00:00:27,400 --> 00:00:28,560
+LARRY: I'm getting this down!
+
+17
+00:00:28,560 --> 00:00:29,560
+LARRY: I'm writing in your bits.
+
+18
+00:00:29,560 --> 00:00:30,400
+SALLY: How?
+
+19
+00:00:30,400 --> 00:00:31,360
+SALLY: How is this possible?
+
+20
+00:00:31,360 --> 00:00:32,159
+SALLY: Tell me.
+
+21
+00:00:32,159 --> 00:00:33,160
+LARRY: Not so fast.
+
+22
+00:00:33,160 --> 00:00:35,440
+DOCTOR: People don't understand time.
+
+23
+00:00:35,440 --> 00:00:36,839
+DOCTOR: It's not what you think it is.
+
+24
+00:00:36,839 --> 00:00:38,080
+SALLY: Then what is it?
+
+25
+00:00:38,080 --> 00:00:39,040
+DOCTOR: Complicated.
+
+26
+00:00:39,040 --> 00:00:40,560
+SALLY: Tell me.
+
+27
+00:00:40,560 --> 00:00:42,480
+DOCTOR: Very complicated.
+
+28
+00:00:42,480 --> 00:00:43,840
+SALLY: I'm clever and I'm listening.
+
+29
+00:00:43,840 --> 00:00:45,959
+SALLY: And don't patronise me because people have died
+
+30
+00:00:45,959 --> 00:00:47,440
+SALLY: and I'm not happy.
+
+31
+00:00:47,440 --> 00:00:50,000
+SALLY: Tell me!
+
+32
+00:00:50,000 --> 00:00:52,519
+DOCTOR: People assume that time is a strict progression of cause to effect
+
+33
+00:00:52,519 --> 00:00:53,519
+LARRY: Of course he can't hear us.
+
+34
+00:00:53,519 --> 00:00:56,320
+DOCTOR: but actually from a non-linear
+
+35
+00:00:56,320 --> 00:00:59,280
+DOCTOR: it's more like a big ball of wibbly-wobbly
+
+36
+00:00:59,280 --> 00:01:00,920
+SALLY: Like you can hear me.
+
+37
+00:01:00,920 --> 00:01:01,560
+DOCTOR: timey-wimey stuff.
+
+38
+00:01:01,560 --> 00:01:02,960
+SALLY: Yeah, I've seen this bit before.
+
+39
+00:01:02,960 --> 00:01:04,879
+SALLY: You said that sentence got away from you.
+
+40
+00:01:04,879 --> 00:01:06,640
+DOCTOR: It got away from me, yeah.
+
+41
+00:01:06,640 --> 00:01:09,720
+SALLY: Next thing you're going to say is
+
+42
+00:01:09,720 --> 00:01:10,720
+DOCTOR: Well, I can hear you.
+
+43
+00:01:10,720 --> 00:01:11,920
+SALLY: This isn't possible.
+
+44
+00:01:11,920 --> 00:01:14,040
+LARRY: It's brilliant!
+
+45
+00:01:14,040 --> 00:01:16,280
+DOCTOR: Not hear you exactly
+
+46
+00:01:16,280 --> 00:01:17,440
+SALLY: You're going to need it.
+
+47
+00:01:17,440 --> 00:01:19,440
+LARRY: Always gives me the shivers, that bit.
+
+48
+00:01:19,440 --> 00:01:22,160
+SALLY: How can you know what I'm going to say?
+
+49
+00:01:22,160 --> 00:01:23,320
+DOCTOR: Look to your left.
+
+50
+00:01:23,320 --> 00:01:25,120
+LARRY: What does he mean by, "Look to your left"?
+
+51
+00:01:25,120 --> 00:01:26,760
+LARRY: I've written tons about that on the forums.
+
+52
+00:01:26,760 --> 00:01:28,840
+LARRY: I think it's a political statement.
+
+53
+00:01:28,840 --> 00:01:30,560
+SALLY: He means you.
+
+54
+00:01:30,560 --> 00:01:32,920
+SALLY: What are you doing?
+
+55
+00:01:32,920 --> 00:01:34,000
+LARRY: I'm writing in your bits.
+
+56
+00:01:34,000 --> 00:01:35,880
+DOCTOR: I've got a copy of the finished transcript.
+
+57
+00:01:35,880 --> 00:01:37,160
+LARRY: So I've got a complete transcript of the whole conversation.
+
+58
+00:01:37,160 --> 00:01:38,480
+LARRY: Wait until this hits the net.
+
+59
+00:01:38,480 --> 00:01:42,280
+LARRY: This will explode the egg forums.
+
+60
+00:01:42,280 --> 00:01:44,920
+SALLY: How can you have a copy of the finished transcript?
+
+61
+00:01:44,920 --> 00:01:46,600
+SALLY: How could he get the transcript?
+
+62
+00:01:46,600 --> 00:01:48,040
+SALLY: It is still being written.
+
+63
+00:01:48,040 --> 00:01:49,280
+DOCTOR: I'm a time traveller.
+
+64
+00:01:49,280 --> 00:01:50,640
+DOCTOR: I got it in the future.
+
+65
+00:01:50,640 --> 00:01:52,440
+SALLY: Okay, let me get my head 'round this.
+
+66
+00:01:52,440 --> 00:01:54,920
+SALLY: You're reading from a transcript of a conversation you're still
+
+67
+00:01:54,920 --> 00:01:56,840
+BEN: You're in Hull.
+
+68
+00:01:56,840 --> 00:01:57,720
+SALLY: Wibbly-wobbly, timey-wimey.
+
+69
+00:01:57,720 --> 00:01:59,120
+SALLY: Gimme a name.
+
+70
+00:01:59,120 --> 00:02:00,600
+SALLY: Actually, never mind that.
+
+71
+00:02:00,600 --> 00:02:03,080
+SALLY: (To Larry): You can do shorthand?
+
+72
+00:02:03,080 --> 00:02:04,600
+LARRY: So?
+
+73
+00:02:04,600 --> 00:02:06,680
+DOCTOR: What matters is we can communicate.
+
+74
+00:02:06,680 --> 00:02:08,280
+DOCTOR: We have got big problems now.
+
+75
+00:02:08,280 --> 00:02:10,480
+DOCTOR: They've taken the blue box, haven't they?
+
+76
+00:02:10,480 --> 00:02:12,280
+DOCTOR: The angels have the phone box.
+
+77
+00:02:12,280 --> 00:02:13,800
+LARRY: The angels have the phone box!
+
+78
+00:02:13,800 --> 00:02:14,520
+DOCTOR: That's me.
+
+79
+00:02:14,520 --> 00:02:16,240
+LARRY: That's my favourite, I've got it on a tee-shirt!
+
+80
+00:02:16,240 --> 00:02:18,120
+SALLY: What do you mean, angels?
+
+81
+00:02:18,120 --> 00:02:20,480
+SALLY: You mean those statue things?
+
+82
+00:02:20,480 --> 00:02:22,400
+DOCTOR: Creatures from another world.
+
+83
+00:02:22,400 --> 00:02:23,640
+SALLY: But they're just statues.
+
+84
+00:02:23,640 --> 00:02:25,040
+DOCTOR: Only when you see them.
+
+85
+00:02:25,040 --> 00:02:26,120
+SALLY: What does that mean?
+
+86
+00:02:26,120 --> 00:02:28,480
+DOCTOR: Lonely assassins, they were called.
+
+87
+00:02:28,480 --> 00:02:29,960
+DOCTOR: No-one knows where they came from.
+
+88
+00:02:29,960 --> 00:02:32,080
+DOCTOR: They're as old as the universe, or very nearly.
+
+89
+00:02:32,080 --> 00:02:33,560
+DOCTOR: They've survived this long as they have the most perfect
+
+90
+00:02:33,560 --> 00:02:36,480
+DOCTOR: defence system ever evolved.
+
+91
+00:02:36,480 --> 00:02:37,920
+DOCTOR: They are quantum-locked.
+
+92
+00:02:37,920 --> 00:02:39,800
+DOCTOR: They don't exist when being observed.
+
+93
+00:02:39,800 --> 00:02:41,880
+DOCTOR: The moment they're seen by any other living creature they
+
+94
+00:02:41,880 --> 00:02:43,760
+DOCTOR: freeze into rock.
+
+95
+00:02:43,760 --> 00:02:45,560
+DOCTOR: It's a fact of their biology.
+
+96
+00:02:45,560 --> 00:02:47,280
+DOCTOR: In the sight of any living thing
+
+97
+00:02:47,280 --> 00:02:49,600
+DOCTOR: they literally turn to stone.
+
+98
+00:02:49,600 --> 00:02:52,120
+DOCTOR: And you can't k*ll a stone.
+
+99
+00:02:52,120 --> 00:02:53,720
+DOCTOR: Course, a stone can't k*ll you either.
+
+100
+00:02:53,720 --> 00:02:55,680
+DOCTOR: But then you turn your head away
+
+101
+00:02:55,680 --> 00:02:57,400
+DOCTOR: then you blink
+
+102
+00:02:57,400 --> 00:02:59,720
+DOCTOR: yes it can!
+
+103
+00:02:59,720 --> 00:03:02,160
+SALLY: Don't take your eyes off that.
+
+104
+00:03:02,160 --> 00:03:03,720
+DOCTOR: That's why they cover their eyes.
+
+105
+00:03:03,720 --> 00:03:04,320
+DOCTOR: They're coming.
+
+106
+00:03:04,320 --> 00:03:06,360
+LARRY: They're looking at each other.
+
+107
+00:03:06,360 --> 00:03:09,160
+DOCTOR: Their greatest asset is their greatest curse.
+
+108
+00:03:09,160 --> 00:03:11,720
+DOCTOR: They can never be seen.
+
+109
+00:03:11,720 --> 00:03:14,440
+DOCTOR: The loneliest creatures in the universe.
+
+110
+00:03:14,440 --> 00:03:15,640
+MALCOLM: I'm sorry
+
+111
+00:03:15,640 --> 00:03:17,720
+DOCTOR: And I'm sorry, Billy, I am very, very sorry.
+
+112
+00:03:17,720 --> 00:03:19,680
+DOCTOR: it's up to you now.
+
+113
+00:03:19,680 --> 00:03:20,880
+SALLY: What am I supposed to do?
+
+114
+00:03:20,880 --> 00:03:22,480
+DOCTOR: The blue box, it's my time machine.
+
+115
+00:03:22,480 --> 00:03:24,120
+DOCTOR: There is a world of time energy in there they
+
+116
+00:03:24,120 --> 00:03:26,280
+DOCTOR: could feast on forever.
+
+117
+00:03:26,280 --> 00:03:28,360
+DOCTOR: The damage they can do can switch off the sun.
+
+118
+00:03:28,360 --> 00:03:30,320
+DOCTOR: You have got to send it back to me!
+
+119
+00:03:30,320 --> 00:03:31,680
+SALLY: How?
+
+120
+00:03:31,680 --> 00:03:34,080
+SALLY: Kathy?
+
+121
+00:03:34,080 --> 00:03:35,240
+LARRY: And that's okay.
+
+122
+00:03:35,240 --> 00:03:37,560
+DOCTOR: There's no more from you on the transcript
+
+123
+00:03:37,560 --> 00:03:40,000
+DOCTOR: that's all I've got.
+
+124
+00:03:40,000 --> 00:03:41,160
+DOCTOR: I dunno what stopped you talking, but I can guess.
+
+125
+00:03:41,160 --> 00:03:42,880
+DOCTOR: but I know everything you're going to say.
+
+126
+00:03:42,880 --> 00:03:45,360
+DOCTOR: The angels are coming for you.
+
+127
+00:03:45,360 --> 00:03:46,920
+DOCTOR: Your life could depend on this.
+
+128
+00:03:46,920 --> 00:03:48,200
+DOCTOR: Don't blink!
+
+129
+00:03:48,200 --> 00:03:49,160
+DOCTOR: Don't even blink.
+
+130
+00:03:49,160 --> 00:03:50,440
+DOCTOR: Blink and you're dead.
+
+131
+00:03:50,440 --> 00:03:52,400
+DOCTOR: They are fast, faster than you can believe.
+
+132
+00:03:52,400 --> 00:03:53,720
+DOCTOR: Don't turn your back.
+
+133
+00:03:53,720 --> 00:03:58,200
+DOCTOR: Don't turn your back, don't look away, and don't blink.
+
+134
+00:03:58,200 --> 00:03:59,680
+DOCTOR: Good luck.
+
