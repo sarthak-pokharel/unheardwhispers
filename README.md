@@ -28,7 +28,7 @@ The easiest way to install and run the application is using our setup script, wh
 ```bash
 # Clone the repository (or download and extract the ZIP)
 git clone https://github.com/sarthak-pokharel/unheardwhispers.git
-cd script-to-subtitles
+cd unheardwhispers
 
 # Run the setup script
 python setup.py
