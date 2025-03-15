@@ -14,56 +14,12 @@ import numpy as np
 import base64
 from io import StringIO
 import plotly.express as px
-import sys
-import subprocess
 
 # Download NLTK resources (run once)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt', quiet=True)
-
-# Ensure FFmpeg can be found if it's in a local directory
-def initialize_local_ffmpeg():
-    """Ensure FFmpeg binaries in project directory are properly detected."""
-    try:
-        # Get script directory (or current working directory)
-        if getattr(sys, 'frozen', False):
-            # Running as executable
-            script_dir = os.path.dirname(sys.executable)
-        else:
-            # Running as script
-            script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        
-        # Check for local FFmpeg in the project's tools directory
-        ffmpeg_path = os.path.join(script_dir, "tools", "ffmpeg", "bin")
-        
-        if os.path.exists(ffmpeg_path):
-            # Add to PATH if not already there
-            if ffmpeg_path not in os.environ['PATH']:
-                os.environ['PATH'] = ffmpeg_path + os.pathsep + os.environ['PATH']
-                print(f"Using local FFmpeg from: {ffmpeg_path}")
-                return True
-        
-        # Verify FFmpeg is available
-        try:
-            result = subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-            if result.returncode == 0:
-                print("FFmpeg detected in system PATH")
-                return True
-            else:
-                print("WARNING: FFmpeg check returned non-zero exit code")
-                return False
-        except (subprocess.SubprocessError, FileNotFoundError):
-            print("WARNING: FFmpeg not found in PATH. Audio processing may fail.")
-            return False
-            
-    except Exception as e:
-        print(f"Error initializing local FFmpeg: {e}")
-        return False
-
-# Initialize local FFmpeg before app starts
-ffmpeg_available = initialize_local_ffmpeg()
 
 # Set page config
 st.set_page_config(
@@ -102,12 +58,6 @@ st.markdown("""
         border-radius: 5px;
         border-left: 3px solid #34a853;
     }
-    .warning-box {
-        background-color: #FFF8E1;
-        padding: 10px;
-        border-radius: 5px;
-        border-left: 3px solid #FFC107;
-    }
     .stProgress > div > div > div {
         background-color: #1E88E5;
     }
@@ -141,23 +91,37 @@ def convert_audio_to_wav(audio_file_path, temp_wav_path, progress_callback=None)
             progress_callback(f"Error converting audio to WAV: {e}", 0.3, error=True)
         return False
 
-def extract_dialog_from_script(script_content, progress_callback=None):
+def extract_dialog_from_script(script_content, has_character_names=True, progress_callback=None):
     """Extract all dialog lines from the script content, preserving exact text."""
     try:
         dialog_lines = []
         
-        # Improved regex pattern for dialog extraction
-        dialog_pattern = re.compile(r'([A-Z]+(?:\s[A-Z]+)*)(?:\s\([^)]*\))?:\s*(.*?)(?=\n\n|\n[A-Z]+(?:\s[A-Z]+)*(?:\s\([^)]*\))?:|\Z)', re.DOTALL)
-        
-        matches = dialog_pattern.findall(script_content)
-        for character, text in matches:
-            # Clean up the text (remove newlines but preserve exact words)
-            clean_text = re.sub(r'\n\s*', ' ', text.strip())
-            if clean_text:
-                dialog_lines.append({
-                    'character': character.strip(),
-                    'text': clean_text
-                })
+        if has_character_names:
+            # Original regex pattern for dialog extraction with character names
+            dialog_pattern = re.compile(r'([A-Z]+(?:\s[A-Z]+)*)(?:\s\([^)]*\))?:\s*(.*?)(?=\n\n|\n[A-Z]+(?:\s[A-Z]+)*(?:\s\([^)]*\))?:|\Z)', re.DOTALL)
+            
+            matches = dialog_pattern.findall(script_content)
+            for character, text in matches:
+                # Clean up the text (remove newlines but preserve exact words)
+                clean_text = re.sub(r'\n\s*', ' ', text.strip())
+                if clean_text:
+                    dialog_lines.append({
+                        'character': character.strip(),
+                        'text': clean_text
+                    })
+        else:
+            # For plain text without character names, we'll split by sentences or paragraphs
+            paragraphs = [p.strip() for p in script_content.split('\n\n') if p.strip()]
+            
+            for paragraph in paragraphs:
+                # Clean up the text
+                clean_text = re.sub(r'\n\s*', ' ', paragraph.strip())
+                if clean_text:
+                    # Add as a line without character name
+                    dialog_lines.append({
+                        'character': '',
+                        'text': clean_text
+                    })
         
         if progress_callback:
             progress_callback(f"Found {len(dialog_lines)} dialog lines in script", 0.4)
@@ -241,23 +205,6 @@ def get_whisper_segments_with_text(temp_wav_path, model, progress_callback=None)
         if progress_callback:
             progress_callback(f"Error transcribing audio: {e}", 0.7, error=True)
         return []
-
-def whisper_segments_to_subtitles(whisper_segments, progress_callback=None):
-    """Convert Whisper segments directly to subtitle segments without script matching."""
-    subtitle_segments = []
-    
-    for segment in whisper_segments:
-        subtitle_segments.append({
-            'start': segment['start'],
-            'end': segment['end'],
-            'text': segment['transcribed_text'],
-            'character': None
-        })
-    
-    if progress_callback:
-        progress_callback(f"Created {len(subtitle_segments)} subtitle segments directly from Whisper transcription", 0.8)
-    
-    return subtitle_segments
 
 def similarity_score(text1, text2):
     """Calculate similarity between two text strings."""
@@ -376,7 +323,7 @@ def generate_srt_from_segments(segments, include_character=True, progress_callba
         end_time = segment['end']
         
         # Use exact text from the script file
-        if include_character and segment.get('character'):
+        if include_character and segment.get('character') and segment.get('character') != '':
             text = f"{segment['character']}: {segment['text']}"
         else:
             text = segment['text']
@@ -399,7 +346,7 @@ def generate_srt_from_segments(segments, include_character=True, progress_callba
     
     return srt_content
 
-def process_files(video_file, script_content=None, use_script=True, include_character=True, model_size="base", similarity_threshold=0.3, max_words=10, progress_callback=None):
+def process_files(video_file, script_content, has_character_names=True, include_character=True, model_size="base", similarity_threshold=0.3, max_words=10, progress_callback=None):
     """Main processing function that handles the entire workflow."""
     # Create temporary directory for processing files
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -430,6 +377,16 @@ def process_files(video_file, script_content=None, use_script=True, include_char
         if not convert_audio_to_wav(audio_path, temp_wav_path, progress_callback):
             return None
         
+        # Extract dialog lines from script
+        dialog_lines = extract_dialog_from_script(script_content, has_character_names, progress_callback)
+        if not dialog_lines:
+            if progress_callback:
+                progress_callback("No dialog found in script file", 0.4, error=True)
+            return None
+        
+        # Break dialog lines into smaller chunks
+        script_chunks = break_dialog_into_chunks(dialog_lines, max_words, progress_callback)
+        
         # Get timing segments and transcribed text from Whisper
         whisper_segments = get_whisper_segments_with_text(temp_wav_path, model, progress_callback)
         if not whisper_segments:
@@ -437,30 +394,13 @@ def process_files(video_file, script_content=None, use_script=True, include_char
                 progress_callback("No speech segments detected", 0.7, error=True)
             return None
         
-        # Check if script should be used and is provided
-        if use_script and script_content:
-            # Extract dialog lines from script
-            dialog_lines = extract_dialog_from_script(script_content, progress_callback)
-            if not dialog_lines:
-                if progress_callback:
-                    progress_callback("No dialog found in script. Falling back to Whisper transcription.", 0.75, error=False)
-                aligned_segments = whisper_segments_to_subtitles(whisper_segments, progress_callback)
-            else:
-                # Break dialog lines into smaller chunks
-                script_chunks = break_dialog_into_chunks(dialog_lines, max_words, progress_callback)
-                
-                # Align script chunks with Whisper segments
-                aligned_segments = align_script_chunks_with_segments(
-                    script_chunks, 
-                    whisper_segments, 
-                    threshold=similarity_threshold, 
-                    progress_callback=progress_callback
-                )
-        else:
-            # Use Whisper transcription directly
-            if progress_callback:
-                progress_callback("Using Whisper transcription directly (no script matching)", 0.75)
-            aligned_segments = whisper_segments_to_subtitles(whisper_segments, progress_callback)
+        # Align script chunks with Whisper segments
+        aligned_segments = align_script_chunks_with_segments(
+            script_chunks, 
+            whisper_segments, 
+            threshold=similarity_threshold, 
+            progress_callback=progress_callback
+        )
         
         # Generate SRT file
         srt_content = generate_srt_from_segments(aligned_segments, include_character, progress_callback)
@@ -475,11 +415,10 @@ def process_files(video_file, script_content=None, use_script=True, include_char
             "aligned_segments": aligned_segments,
             "stats": {
                 "processing_time": elapsed,
-                "dialog_lines": len(dialog_lines) if use_script and 'dialog_lines' in locals() else 0,
-                "script_chunks": len(script_chunks) if use_script and 'script_chunks' in locals() else 0,
+                "dialog_lines": len(dialog_lines),
+                "script_chunks": len(script_chunks),
                 "speech_segments": len(whisper_segments),
-                "subtitle_segments": len(aligned_segments),
-                "using_script": use_script and script_content and len(dialog_lines) > 0 if use_script and 'dialog_lines' in locals() else False
+                "subtitle_segments": len(aligned_segments)
             }
         }
 
@@ -493,29 +432,11 @@ def get_download_link(content, filename, text):
 def main():
     # Header
     st.markdown('<p class="main-header">🎬 Script to Subtitles Converter</p>', unsafe_allow_html=True)
-    st.markdown('<p class="info-text">Create accurate SRT subtitles from video using optional script matching</p>', unsafe_allow_html=True)
-    
-    # Check FFmpeg availability
-    if not ffmpeg_available:
-        st.markdown('<div class="warning-box">', unsafe_allow_html=True)
-        st.warning("""
-        ⚠️ **FFmpeg Not Detected**: This app requires FFmpeg to process audio/video files.
-        
-        Please ensure you've run the setup script (`setup_windows.bat` or `setup_linux.sh`) before using this app.
-        
-        If you continue, the app may fail when processing videos.
-        """)
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<p class="info-text">Create accurate SRT subtitles from video and script files</p>', unsafe_allow_html=True)
     
     # Sidebar for options
     with st.sidebar:
         st.markdown('<p class="sub-header">Configuration</p>', unsafe_allow_html=True)
-        
-        use_script = st.toggle(
-            "Use Script for Exact Dialog", 
-            value=True, 
-            help="When enabled, matches Whisper timing with your script text. When disabled, uses Whisper transcription directly."
-        )
         
         model_size = st.selectbox(
             "Whisper Model Size", 
@@ -524,45 +445,47 @@ def main():
             help="Larger models are more accurate but slower and use more memory"
         )
         
-        include_character = st.checkbox(
-            "Include Character Names", 
+        has_character_names = st.checkbox(
+            "Script Has Character Names", 
             value=True,
-            help="Include character names in the subtitles (e.g., 'DOCTOR: Don't blink')",
-            disabled=not use_script
+            help="Check this if your script includes character names followed by a colon (e.g., 'CHARACTER: Dialog')"
         )
         
-        # Only show script-related settings if using script
-        if use_script:
-            st.markdown("### Script Matching Settings")
-            similarity_threshold = st.slider(
-                "Similarity Threshold", 
-                min_value=0.1, 
-                max_value=0.9, 
-                value=0.3, 
-                step=0.05,
-                help="Minimum similarity score required to match transcribed text with script lines"
-            )
-            
-            max_words = st.slider(
-                "Max Words Per Chunk", 
-                min_value=5, 
-                max_value=20, 
-                value=10, 
-                step=1,
-                help="Maximum words per chunk when breaking down long sentences"
-            )
-        else:
-            # Default values when not using script
-            similarity_threshold = 0.3
-            max_words = 10
+        include_character = st.checkbox(
+            "Include Character Names in Subtitles", 
+            value=True,
+            help="Include character names in the subtitles output (only applies if script has character names)"
+        )
+        
+        # Disable the include_character checkbox if has_character_names is False
+        if not has_character_names:
+            st.session_state.include_character = False
+            include_character = False
+        
+        similarity_threshold = st.slider(
+            "Similarity Threshold", 
+            min_value=0.1, 
+            max_value=0.9, 
+            value=0.3, 
+            step=0.05,
+            help="Minimum similarity score required to match transcribed text with script lines"
+        )
+        
+        max_words = st.slider(
+            "Max Words Per Chunk", 
+            min_value=5, 
+            max_value=20, 
+            value=10, 
+            step=1,
+            help="Maximum words per chunk when breaking down long sentences"
+        )
         
         st.markdown("---")
         st.markdown("### About")
         st.markdown("""
-        This app creates SRT subtitle files by aligning video speech with optional script text.
-        It uses OpenAI's Whisper for speech recognition and can either:
-        - Match transcript timing with your exact script dialog
-        - Use Whisper's transcription directly
+        This app creates SRT subtitle files by aligning video speech with your script text.
+        It uses OpenAI's Whisper for speech recognition and text alignment algorithms to match
+        the transcript timing with your exact script dialog.
         """)
 
     # Main content area - Two columns layout
@@ -573,37 +496,26 @@ def main():
         
         video_file = st.file_uploader("Upload Video File", type=['mp4', 'avi', 'mov', 'mkv'])
         
-        script_content = None
+        script_tab1, script_tab2 = st.tabs(["Upload Script File", "Paste Script Text"])
         
-        # Only show script input if using script
-        if use_script:
-            script_tab1, script_tab2 = st.tabs(["Upload Script File", "Paste Script Text"])
-            
-            with script_tab1:
-                script_file = st.file_uploader("Upload Script File", type=['txt'])
-                script_content = script_file.getvalue().decode('utf-8') if script_file else None
-            
-            with script_tab2:
-                pasted_script = st.text_area(
-                    "Paste your script here", 
-                    height=300,
-                    placeholder="Paste your script text here. Format should be:\n\nCHARACTER: Dialog text.\n\nANOTHER CHARACTER: More dialog text."
-                )
-                if pasted_script and not script_content:
-                    script_content = pasted_script
-            
-            if not script_content and use_script:
-                st.markdown('<div class="warning-box">', unsafe_allow_html=True)
-                st.warning("Script matching is enabled but no script is provided. You can either upload/paste a script or disable script matching in the sidebar.")
-                st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            st.info("Script matching is disabled. Whisper's transcription will be used directly for subtitles.")
+        with script_tab1:
+            script_file = st.file_uploader("Upload Script File", type=['txt'])
+            script_content = script_file.getvalue().decode('utf-8') if script_file else None
+        
+        with script_tab2:
+            pasted_script = st.text_area(
+                "Paste your script here", 
+                height=300,
+                placeholder="Paste your script text here. If your script has character names, use format:\n\nCHARACTER: Dialog text.\n\nOtherwise, just paste plain text and uncheck 'Script Has Character Names' in sidebar."
+            )
+            if pasted_script and not script_content:
+                script_content = pasted_script
         
         # Process button
-        if video_file:
+        if video_file and script_content:
             process_button = st.button("Generate Subtitles", type="primary", use_container_width=True)
         else:
-            st.warning("Please upload a video file to continue.")
+            st.warning("Please upload both a video file and script file (or paste script text) to continue.")
             process_button = False
     
     with col2:
@@ -612,17 +524,16 @@ def main():
         st.markdown('<div class="highlight">', unsafe_allow_html=True)
         st.markdown("""
         1. **Upload your video file** (MP4, AVI, MOV, etc.)
-        2. **Choose processing mode** in the sidebar:
-           - With script matching (recommended for accuracy)
-           - Whisper transcription only (faster)
-        3. **Provide your script** (if using script matching)
+        2. **Provide your script** (upload TXT file or paste text)
+        3. **Adjust settings** in the sidebar if needed
         4. **Click "Generate Subtitles"**
         5. **Download** your SRT file when processing is complete
         """)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        if use_script:
-            st.markdown("### Script Format Requirements")
+        st.markdown("### Script Format Requirements")
+        
+        if has_character_names:
             st.info("""
             Your script should follow this format:
             
@@ -633,32 +544,45 @@ def main():
             The app will extract dialog lines and match them with the video's audio.
             """)
             
-            # Example script button (collapsible)
-            with st.expander("View Example Script"):
+            # Example script button (collapsible) for script with character names
+            with st.expander("View Example Script With Character Names"):
                 st.code("""
-    DOCTOR: People don't understand time. It's not what you think it is.
-    
-    SALLY: Then what is it?
-    
-    DOCTOR: Complicated.
-    
-    SALLY: Tell me.
-    
-    DOCTOR: Very complicated.
-    
-    SALLY: I'm clever and I'm listening. And don't patronise me because people have died, and I'm not happy. Tell me.
+DOCTOR: People don't understand time. It's not what you think it is.
+
+SALLY: Then what is it?
+
+DOCTOR: Complicated.
+
+SALLY: Tell me.
+
+DOCTOR: Very complicated.
+
+SALLY: I'm clever and I'm listening. And don't patronise me because people have died, and I'm not happy. Tell me.
                 """)
         else:
-            st.markdown("### Whisper Transcription Mode")
             st.info("""
-            In this mode, the app will:
-            
-            1. Extract audio from your video
-            2. Process speech with OpenAI's Whisper model
-            3. Create SRT subtitles directly from Whisper's output
-            
-            This is useful when you don't have a script or want quick results.
+            When not using character names, simply paste your transcript as plain text.
+            The app will break it into chunks based on paragraphs and match timing with the audio.
             """)
+            
+            # Example script button (collapsible) for script without character names
+            with st.expander("View Example Script Without Character Names"):
+                st.code("""
+People don't understand time. It's not what you think it is.
+
+Then what is it?
+
+Complicated.
+
+Tell me.
+
+Very complicated.
+
+I'm clever and I'm listening. And don't patronise me because people have died, and I'm not happy. Tell me.
+                """)
+        
+        # Example script button (collapsible)
+        
     
     # Progress display and results area (full width)
     progress_placeholder = st.empty()
@@ -683,9 +607,9 @@ def main():
         # Process files
         result = process_files(
             video_file, 
-            script_content,
-            use_script=use_script,
-            include_character=include_character if use_script else False,
+            script_content, 
+            has_character_names=has_character_names,
+            include_character=include_character,
             model_size=model_size,
             similarity_threshold=similarity_threshold,
             max_words=max_words,
@@ -710,12 +634,6 @@ def main():
                     st.markdown(download_link, unsafe_allow_html=True)
                     st.markdown('</div>', unsafe_allow_html=True)
                     
-                    # Show source of subtitles
-                    if result["stats"]["using_script"]:
-                        st.success("Subtitles were created using script matching for exact dialog text.")
-                    else:
-                        st.info("Subtitles were created directly from Whisper's transcription.")
-                    
                     # Raw SRT preview
                     with st.expander("View SRT Content"):
                         st.text(result["srt_content"])
@@ -731,7 +649,7 @@ def main():
                             "End Time": f"{int(segment['end'] // 60):02d}:{int(segment['end'] % 60):02d}.{int((segment['end'] % 1) * 1000):03d}",
                             "Character": segment.get('character', 'N/A'),
                             "Text": segment['text'],
-                            "Match Score": f"{segment.get('match_score', 0) * 100:.1f}%" if "match_score" in segment else "N/A"
+                            "Match Score": f"{segment.get('match_score', 0) * 100:.1f}%"
                         })
                     
                     st.dataframe(preview_data, use_container_width=True)
@@ -746,10 +664,7 @@ def main():
                         st.metric("Processing Time", f"{stats['processing_time']:.1f}s")
                     
                     with col_b:
-                        if stats["using_script"]:
-                            st.metric("Script Lines", stats['dialog_lines'])
-                        else:
-                            st.metric("Transcription Mode", "Whisper")
+                        st.metric("Script Lines", stats['dialog_lines'])
                     
                     with col_c:
                         st.metric("Speech Segments", stats['speech_segments'])
@@ -757,32 +672,29 @@ def main():
                     with col_d:
                         st.metric("Total Subtitles", stats['subtitle_segments'])
                     
-                    # Match score distribution chart (only if using script)
-                    if stats["using_script"]:
-                        match_scores = [segment.get('match_score', 0) for segment in result["aligned_segments"] if 'match_score' in segment]
-                        if match_scores:
-                            score_df = pd.DataFrame({
-                                'Match Score': [score * 100 for score in match_scores]
-                            })
-                            
-                            fig = px.histogram(
-                                score_df, 
-                                x='Match Score',
-                                title='Distribution of Match Scores (%)',
-                                labels={'Match Score': 'Similarity Score (%)'},
-                                color_discrete_sequence=['#1E88E5'],
-                                nbins=20
-                            )
-                            fig.update_layout(
-                                xaxis_range=[0, 100],
-                                xaxis_ticksuffix='%'
-                            )
-                            st.plotly_chart(fig, use_container_width=True)
-                    else:
-                        st.info("Match scores are not available when using Whisper transcription directly.")
+                    # Match score distribution chart
+                    match_scores = [segment.get('match_score', 0) for segment in result["aligned_segments"] if 'match_score' in segment]
+                    if match_scores:
+                        score_df = pd.DataFrame({
+                            'Match Score': [score * 100 for score in match_scores]
+                        })
+                        
+                        fig = px.histogram(
+                            score_df, 
+                            x='Match Score',
+                            title='Distribution of Match Scores (%)',
+                            labels={'Match Score': 'Similarity Score (%)'},
+                            color_discrete_sequence=['#1E88E5'],
+                            nbins=20
+                        )
+                        fig.update_layout(
+                            xaxis_range=[0, 100],
+                            xaxis_ticksuffix='%'
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
         
         # Clear progress display
         progress_placeholder.empty()
 
 if __name__ == "__main__":
-    main() 
+    main()

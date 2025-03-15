@@ -9,50 +9,12 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 from tqdm import tqdm
 import time
-import sys
-import subprocess
 
 # Download NLTK resources (run once)
 try:
     nltk.data.find('tokenizers/punkt')
 except LookupError:
     nltk.download('punkt', quiet=True)
-
-# Ensure FFmpeg can be found if it's in a local directory
-def initialize_local_ffmpeg():
-    """Ensure FFmpeg binaries in project directory are properly detected."""
-    try:
-        # Get script directory (or current working directory)
-        if getattr(sys, 'frozen', False):
-            # Running as executable
-            script_dir = os.path.dirname(sys.executable)
-        else:
-            # Running as script
-            script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        
-        # Check for local FFmpeg in the project's tools directory
-        ffmpeg_path = os.path.join(script_dir, "tools", "ffmpeg", "bin")
-        
-        if os.path.exists(ffmpeg_path):
-            # Add to PATH if not already there
-            if ffmpeg_path not in os.environ['PATH']:
-                os.environ['PATH'] = ffmpeg_path + os.pathsep + os.environ['PATH']
-                print(f"Using local FFmpeg from: {ffmpeg_path}")
-        
-        # Verify FFmpeg is available
-        try:
-            subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False)
-            return True
-        except (subprocess.SubprocessError, FileNotFoundError):
-            print("WARNING: FFmpeg not found in PATH. Audio processing may fail.")
-            return False
-            
-    except Exception as e:
-        print(f"Error initializing local FFmpeg: {e}")
-        return False
-
-# Initialize local FFmpeg on module import
-initialize_local_ffmpeg()
 
 def extract_audio_from_video(video_file_path, audio_file_path):
     """Extract audio from video file."""
@@ -165,20 +127,6 @@ def get_whisper_segments_with_text(temp_wav_path, model):
     except Exception as e:
         print(f"Error transcribing audio: {e}")
         return []
-
-def whisper_segments_to_subtitles(whisper_segments):
-    """Convert Whisper segments directly to subtitle segments without script matching."""
-    subtitle_segments = []
-    
-    for segment in whisper_segments:
-        subtitle_segments.append({
-            'start': segment['start'],
-            'end': segment['end'],
-            'text': segment['transcribed_text'],
-            'character': None
-        })
-    
-    return subtitle_segments
 
 def similarity_score(text1, text2):
     """Calculate similarity between two text strings."""
@@ -314,8 +262,8 @@ def generate_srt_from_segments(segments, srt_file_path, include_character=True):
         print(f"Error saving SRT file: {e}")
         return False
 
-def transcribe_audio_to_srt(audio_file_path, srt_file_path, script_file_path=None, include_character=True, model_size="base"):
-    """Main function to transcribe audio and align with script text (if provided)."""
+def transcribe_audio_to_srt(audio_file_path, srt_file_path, script_file_path, include_character=True, model_size="base"):
+    """Main function to transcribe audio and align with script text."""
     # Setup
     temp_wav_path = "temp.wav"
     start_time = time.time()
@@ -328,34 +276,26 @@ def transcribe_audio_to_srt(audio_file_path, srt_file_path, script_file_path=Non
     if not convert_audio_to_wav(audio_file_path, temp_wav_path):
         return False
     
+    # Extract dialog lines from script file
+    print("Extracting dialog from script file...")
+    dialog_lines = extract_dialog_from_script(script_file_path)
+    if not dialog_lines:
+        print("No dialog found in script file.")
+        return False
+    
+    # Break dialog lines into smaller chunks
+    print("Breaking dialog into smaller chunks...")
+    script_chunks = break_dialog_into_chunks(dialog_lines)
+    print(f"Created {len(script_chunks)} script chunks from {len(dialog_lines)} dialog lines")
+    
     # Get timing segments and transcribed text from Whisper
     whisper_segments = get_whisper_segments_with_text(temp_wav_path, model)
     if not whisper_segments:
         print("No speech segments detected.")
         return False
     
-    # Check if script file is provided
-    if script_file_path:
-        # Use script file content for subtitles
-        print("Extracting dialog from script file...")
-        dialog_lines = extract_dialog_from_script(script_file_path)
-        if not dialog_lines:
-            print("No dialog found in script file. Falling back to Whisper transcription.")
-            aligned_segments = whisper_segments_to_subtitles(whisper_segments)
-        else:
-            # Break dialog lines into smaller chunks
-            print("Breaking dialog into smaller chunks...")
-            script_chunks = break_dialog_into_chunks(dialog_lines)
-            print(f"Created {len(script_chunks)} script chunks from {len(dialog_lines)} dialog lines")
-            
-            # Align script chunks with Whisper segments
-            aligned_segments = align_script_chunks_with_segments(script_chunks, whisper_segments)
-            print(f"Created {len(aligned_segments)} aligned segments")
-    else:
-        # No script file provided, use Whisper transcription directly
-        print("No script file provided. Using Whisper transcription directly.")
-        aligned_segments = whisper_segments_to_subtitles(whisper_segments)
-        print(f"Created {len(aligned_segments)} subtitle segments from Whisper transcription")
+    # Align script chunks with Whisper segments
+    aligned_segments = align_script_chunks_with_segments(script_chunks, whisper_segments)
     
     # Generate SRT file
     print("Generating SRT file...")
@@ -367,5 +307,28 @@ def transcribe_audio_to_srt(audio_file_path, srt_file_path, script_file_path=Non
         os.remove(temp_wav_path)
     
     elapsed = time.time() - start_time
+    print(f"Created subtitles with {len(aligned_segments)} segments from {len(script_chunks)} script chunks")
     print(f"Total processing time: {elapsed:.2f} seconds")
     return True
+
+# Example usage
+if __name__ == "__main__":
+    video_path = 'input/blink.mp4'
+    script_path = 'input/blink.txt'
+    audio_path = 'extracted_audio.mp3'
+    srt_path = 'output_subtitles.srt'
+    
+    # Extract audio from video if needed
+    if not os.path.exists(audio_path):
+        print(f"Extracting audio from {video_path}...")
+        extract_audio_from_video(video_path, audio_path)
+    
+    # Transcribe with transcript text only, broken into smaller chunks
+    transcribe_audio_to_srt(
+        audio_file_path=audio_path,
+        srt_file_path=srt_path,
+        script_file_path=script_path,
+        include_character=True,
+        model_size="base"  # Options: "tiny", "base", "small", "medium", "large"
+    )
+    print(f"Transcription complete. SRT file saved to {srt_path}")
