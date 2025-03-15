@@ -331,27 +331,3 @@ def transcribe_audio_to_srt(audio_file_path, srt_file_path, script_file_path=Non
     elapsed = time.time() - start_time
     print(f"Total processing time: {elapsed:.2f} seconds")
     return True
-
-# Example usage
-if __name__ == "__main__":
-    video_path = 'input/blink.mp4'
-    script_path = 'input/blink.txt'
-    audio_path = 'extracted_audio.mp3'
-    srt_path = 'output_subtitles.srt'
-    
-    # Extract audio from video if needed
-    if not os.path.exists(audio_path):
-        print(f"Extracting audio from {video_path}...")
-        extract_audio_from_video(video_path, audio_path)
-    
-    # Transcribe with transcript text if available, otherwise use Whisper only
-    use_script = True  # Set to False to use Whisper transcription only
-    
-    transcribe_audio_to_srt(
-        audio_file_path=audio_path,
-        srt_file_path=srt_path,
-        script_file_path=script_path if use_script else None,
-        include_character=True,
-        model_size="base"  # Options: "tiny", "base", "small", "medium", "large"
-    )
-    print(f"Transcription complete. SRT file saved to {srt_path}")
