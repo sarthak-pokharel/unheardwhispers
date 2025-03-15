@@ -25,36 +25,52 @@ A Streamlit application that creates SRT subtitle files by aligning video speech
 
 ## Quick Installation (Recommended)
 
-The easiest way to install and run the application is using our setup script, which will:
-- Check and install FFmpeg if needed
-- Install all Python dependencies
-- Create launcher scripts (runapp.bat/runapp.sh)
+The easiest way to install and run the application is using our platform-specific setup scripts.
+
+### For Windows:
+
+```
+# Clone the repository (or download and extract the ZIP)
+git clone https://github.com/sarthak-pokharel/unheardwhispers.git
+cd unheardwhispers
+
+# Run the Windows setup script (right-click and "Run as administrator" recommended)
+setup_windows.bat
+```
+
+After setup completes, run the application with:
+```
+runapp.bat
+```
+
+### For Linux/macOS:
 
 ```bash
 # Clone the repository (or download and extract the ZIP)
 git clone https://github.com/sarthak-pokharel/unheardwhispers.git
 cd unheardwhispers
 
-# For Windows users: Run Command Prompt or PowerShell as Administrator
-# For macOS/Linux: You may need to use sudo for system-wide installations
+# Make the setup script executable
+chmod +x setup_linux.sh
 
-# Run the setup script
-python setup.py
+# Run the setup script (sudo recommended for Linux)
+# Linux:
+sudo ./setup_linux.sh
+# macOS:
+./setup_linux.sh
 ```
 
 After setup completes, run the application with:
 ```bash
-# On Windows:
-runapp.bat
-
-# On macOS/Linux:
 ./runapp.sh
+```
 
-# Or directly with Streamlit:
+### Directly with Streamlit (all platforms):
+```
 streamlit run src/app.py
 ```
 
-### Troubleshooting Windows Installation
+## Troubleshooting Windows Installation
 
 If you encounter build errors on Windows during the setup process:
 
@@ -62,7 +78,7 @@ If you encounter build errors on Windows during the setup process:
    - Right-click on Command Prompt or PowerShell
    - Select "Run as administrator"
    - Navigate to the project directory
-   - Run `python setup.py`
+   - Run `setup_windows.bat`
 
 2. Make sure you have Microsoft Visual C++ Build Tools installed
    - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
@@ -76,7 +92,23 @@ If you encounter build errors on Windows during the setup process:
    pip install -r requirements.txt --prefer-binary --user
    ```
 
-4. Try using the updated `runapp.bat` which includes an option to restart with administrator privileges
+## Troubleshooting Linux Installation
+
+If you encounter issues on Linux:
+
+1. **Run with sudo** for system-wide installation
+   ```
+   sudo ./setup_linux.sh
+   ```
+
+2. Install required system dependencies:
+   ```
+   # For Ubuntu/Debian
+   sudo apt-get install python3-dev build-essential
+   
+   # For Fedora
+   sudo dnf install python3-devel gcc
+   ```
 
 ## Manual Installation
 

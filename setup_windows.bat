@@ -7,32 +7,6 @@ echo   Script to Subtitles Converter Setup
 echo ========================================
 echo.
 
-REM Check for admin privileges
-NET SESSION >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
-    echo [WARNING] Not running with administrator privileges.
-    echo Some installations may fail due to permission issues.
-    echo.
-    echo Options:
-    echo 1. Continue without admin rights
-    echo 2. Restart with admin rights (recommended)
-    echo 3. Exit
-    
-    set /p choice="Enter your choice (1-3): "
-    
-    if "!choice!"=="2" (
-        echo Restarting with admin rights...
-        powershell -Command "Start-Process cmd -ArgumentList '/c cd /d %CD% && %~f0' -Verb RunAs"
-        exit /b
-    ) else if "!choice!"=="3" (
-        exit /b
-    )
-    echo Continuing without admin rights...
-    echo.
-) else (
-    echo [INFO] Running with administrator privileges.
-)
-
 REM Check Python version
 python --version > nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
@@ -159,7 +133,6 @@ if %ERRORLEVEL% NEQ 0 (
         echo 1. Install Microsoft Visual C++ Build Tools
         echo    Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/
         echo    Select "Desktop development with C++" during installation
-        echo 2. Try again with administrator privileges
     )
 )
 
@@ -169,29 +142,6 @@ echo [INFO] Creating launcher script...
 echo @echo off
 echo echo Script to Subtitles Converter
 echo echo ============================
-echo.
-echo REM Check for admin privileges
-echo NET SESSION ^>nul 2^>^&1
-echo if %%ERRORLEVEL%% NEQ 0 ^(
-echo     echo Not running with administrator privileges. Some installations may fail.
-echo     echo.
-echo     echo Options:
-echo     echo 1. Continue without admin rights
-echo     echo 2. Restart with admin rights ^(recommended for installation^)
-echo     echo 3. Exit
-echo     
-echo     set /p choice="Enter your choice ^(1-3^): "
-echo     
-echo     if "%%choice%%"=="2" ^(
-echo         echo Restarting with admin rights...
-echo         powershell -Command "Start-Process cmd -ArgumentList '/c cd /d %%CD%% ^&^& %%~f0' -Verb RunAs"
-echo         exit /b
-echo     ^) else if "%%choice%%"=="3" ^(
-echo         exit /b
-echo     ^)
-echo     echo Continuing without admin rights...
-echo     echo.
-echo ^)
 echo.
 echo REM Check if Python dependencies are installed
 echo python -c "import streamlit" 2^>nul
